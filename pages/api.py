@@ -10,12 +10,11 @@ import psycopg2
 import math
 
 global customer_id
-customer_id = 2
+customer_id = 17
 global uuid
 global iid
 global merchant_id
 global transfer_id
-
 
 
 class Api:
@@ -60,6 +59,7 @@ class Api:
         print(body[0]["available_amount"])
         amount = body[0]["available_amount"]
         return amount
+
     #    print(response.json()["available_amount"])
 
     def payment_form_first_time(self, currency):
@@ -289,7 +289,7 @@ class Api:
         json = {
             "amount": 100,
             "currency_code": f"{currency}",
-            "customer_fee_percent": 0,
+            "customer_fee_percent": 100,
             "customer_id": "autotest",
             "customer_profile": {
                 "address_a": "string",
@@ -522,6 +522,25 @@ class Api:
         assert response.status_code == 200, "Transfer not initiated"
         return transfer_id
 
+    def initiate_transfer_with_zero_amount(self, currency):
+        password = "12345678"
+        username = "superadmin-test@banksend.com"
+        global merchant_id, transfer_id
+        if currency == "CAD":
+            merchant_id = 5
+        else:
+            merchant_id = 6
+        response = requests.post(
+            self.link + f"/api/v1/merchants/{merchant_id}/transfers/create?currency={currency}&type=INCOME&user_id=1",
+            headers=self.authorize(password, username))
+        if response.status_code != 400:
+            requests.post(
+                self.link + f"/api/v1/merchants/{merchant_id}/transfers/create?currency={currency}&type=INCOME&user_id=1",
+                headers=self.authorize(password, username))
+            print(response.json())
+        elif response.status_code == 400:
+            return True
+
     def action_list_for_transfer(self):
         global transfer_id
         password = "12345678"
@@ -546,12 +565,11 @@ class Api:
         print(result)
         return result
 
-
     def calculation_income_transfer_fees(self, fee_settings, currency, amount):
         sum = 0
         result = []
         for elem in fee_settings:
-            if (elem["type"] == "TRANSFER" or elem["type"] == "TRANSFER_INCOME") and elem["income"] is True and\
+            if (elem["type"] == "TRANSFER" or elem["type"] == "TRANSFER_INCOME") and elem["income"] is True and \
                     elem["currency"] == f"{currency}":
                 if elem["amount_type"] == "FIXED":
                     sum += elem["amount"]
@@ -582,12 +600,6 @@ class Api:
                     sum += (amount * elem["amount"]) / 100
                     result_array.append(round((amount * elem["amount"]) / 100, 5))
         return [sum, result_array]
-
-
-
-
-
-
 
 
 class ReturnBasePage(BasePage):
@@ -831,5 +843,3 @@ class ReturnBasePage(BasePage):
     def check_merchant_balance_in_ui(self):
         print(self.browser.find_element(*CustomersPageLocators.BALANCE_MERCHANT).text)
         self.browser.find_element(*CustomersPageLocators.BALANCE_MERCHANT)
-
-

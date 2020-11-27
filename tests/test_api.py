@@ -5,7 +5,7 @@ import time
 link = "https://test.banksend.com"
 
 
-@pytest.mark.smoke
+@pytest.mark.test
 class TestApiMerchantBalanceController:
     @pytest.mark.parametrize('currency', ['CAD', 'USD'])
     def test_get_balance(self, currency):
@@ -218,9 +218,9 @@ class TestFees:
         assert all(elem in result for elem in api.output_fee_for_to_customer_defined_repeat(settings, currency)), \
             f"Fee calculation for 'to customer defined repeat' in {currency} transaction not correctly"
 
-    @pytest.mark.test
     def test_transfer_after_income_transaction(self, browser, currency):
         api = Api(link)
+        api.initiate_transfer_with_zero_amount(currency)
         self.test_fee_for_incoming_first_time(currency, browser)
         api.settled_transaction()
         api.initiate_transfer(currency)
