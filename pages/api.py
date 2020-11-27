@@ -1,3 +1,4 @@
+import itertools
 import random
 import requests
 from .locators import CustomersPageLocators
@@ -534,9 +535,7 @@ class Api:
             self.link + f"/api/v1/merchants/{merchant_id}/transfers/create?currency={currency}&type=INCOME&user_id=1",
             headers=self.authorize(password, username))
         if response.status_code != 400:
-            requests.post(
-                self.link + f"/api/v1/merchants/{merchant_id}/transfers/create?currency={currency}&type=INCOME&user_id=1",
-                headers=self.authorize(password, username))
+            itertools.repeat(response, 1)
             print(response.json())
         elif response.status_code == 400:
             return True
