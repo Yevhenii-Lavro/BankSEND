@@ -7,6 +7,7 @@ from pages.locators import PaymentFormLocators
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.action_chains import ActionChains
 import psycopg2
+import math
 
 global customer_id
 customer_id = 2
@@ -242,7 +243,7 @@ class Api:
                 if element["income"] == True and element["currency"] == f"{currency}" and \
                         element["transaction_count"] < 1:
                     result.append(element["amount"])
-                elif element["income"] == False:
+                elif element["income"] is False:
                     result.append(element["amount"])
         print(result)
         return result
@@ -322,7 +323,7 @@ class Api:
         json = {
             "amount": 100,
             "currency_code": f"{currency}",
-            "customer_fee_percent": 0,
+            "customer_fee_percent": 100,
             "customer_id": f"{self.randome()}",
             "customer_profile": {
                 "address_a": "string",
@@ -479,7 +480,7 @@ class Api:
     @staticmethod
     def check_fee_for_transfer():
         global transfer_id
-        json = {"search_text": f"{transfer_id}",
+        json = {"transfer_id": f"{transfer_id}",
                 "entity_types": ["TRANSFER_FEE"], "timezone": "Europe/Kiev"}
         return json
 
@@ -544,6 +545,46 @@ class Api:
                     result.append(element["amount"])
         print(result)
         return result
+
+
+    def calculation_income_transfer_fees(self, fee_settings, currency, amount):
+        sum = 0
+        result = []
+        for elem in fee_settings:
+            if (elem["type"] == "TRANSFER" or elem["type"] == "TRANSFER_INCOME") and elem["income"] is True and\
+                    elem["currency"] == f"{currency}":
+                if elem["amount_type"] == "FIXED":
+                    sum += elem["amount"]
+                    result.append(elem["amount"])
+                else:
+                    sum += (amount * elem["amount"]) / 100
+                    result.append((amount * elem["amount"]) / 100)
+        return [sum, result]
+
+        # Massive of types - with Oleksii
+
+    def calculation_expense_transfer_fees(self, fee_setting, currency, amount, result_array):
+        sum = 0
+        for elem in fee_setting:
+            if (elem["type"] == "TRANSFER" or elem["type"] == "TRANSFER_INCOME") and elem["income"] is False:
+                if elem["amount_type"] == "FIXED":
+                    if elem["currency"] == currency:
+                        sum += elem["amount"]
+                        result_array.append(elem["amount"])
+                    else:
+                        if currency == "USD":
+                            sum += elem["amount"] / 1.31
+                            result_array.append(elem["amount"] / 1.31)
+                        else:
+                            sum += elem["amount"] * 1.31
+                            result_array.appen(elem["amount"] * 1.31)
+                else:
+                    sum += (amount * elem["amount"]) / 100
+                    result_array.append(round((amount * elem["amount"]) / 100, 5))
+        return [sum, result_array]
+
+
+
 
 
 

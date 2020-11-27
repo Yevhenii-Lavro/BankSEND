@@ -230,9 +230,16 @@ class TestFees:
             result.append(element["amount"])
         print(result)
         settings = api.fee_settings(currency)
-        assert all(elem in result for elem in api.output_fee_for_transfer(settings, currency)), \
+        amount = 100
+        income_sum = api.calculation_income_transfer_fees(settings, currency, amount)
+        expense_sum = api.calculation_expense_transfer_fees(settings, currency, amount - income_sum[0], income_sum[1])
+        # print(income_sum[0])
+        # print(income_sum[1])
+        print(expense_sum[1])
+        # print(expense_sum[0])
+        assert all(elem in result for elem in expense_sum[1]), \
             f"Fee calculation for transfer in {currency} not correctly"
-        api.get_balance(currency)
+    #    api.get_balance(currency)
     #    page = ReturnBasePage(browser, link)
     #    page.login_as_merchant()
     #    page.check_merchant_balance_in_ui()
